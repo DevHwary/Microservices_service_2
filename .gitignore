@@ -1,2 +1,4 @@
 venv
 .dbdata
+__pycache__/*
+migrations/*
