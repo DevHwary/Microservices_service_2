@@ -5,6 +5,7 @@ from flask_cors import CORS
 from sqlalchemy import UniqueConstraint
 from dataclasses import dataclass
 import requests
+from producer import publish
 
 
 app = Flask(__name__)
@@ -41,13 +42,15 @@ def index():
 
 @app.route('/api/products/<int:id>/like', methods=['POST'])
 def like(id):
-    req = requests.get('http://172.17.0.1:8050/api/user')
+    req = requests.get('http://172.17.0.1:8050/api/user')   # get the user from internal connect with Django service
     req_json = req.json()
 
     try:
-        productUser = ProductUser(user_id=req_json['id'], product_id=req_json=id)
+        productUser = ProductUser(user_id=req_json['id'], product_id=id)
         db.session.add(productUser)
         db.session.commit()
+
+        publish('product-liked', id)      # send the product_id using RabbitMQ to django service
     except:
         abort(400, 'You have already liked the product')
     
